@@ -1,4 +1,4 @@
-# Interview Walkthrough
+# Technical Architecture
 
 ## Architecture
 
@@ -8,6 +8,16 @@ The private project is structured around four layers:
 2. Runtime feature registry and overlay controls.
 3. Native library discovery, pattern scanning, and hook installation.
 4. Target-specific research modules for script, dialogue, achievement, and runtime-state tracing.
+
+## Layer Responsibilities
+
+| Layer | Responsibility | Portfolio Signal |
+| --- | --- | --- |
+| Android entry | Load only inside intended target processes and keep the module disabled elsewhere. | Production-style scope control and stability thinking. |
+| Feature registry | Store booleans/floats, expose runtime controls, and persist settings across launches. | Runtime tooling design instead of one-off scripts. |
+| JNI/native bridge | Connect Java controls to C++ status, scanners, and runtime instrumentation. | Android systems integration. |
+| Native runtime tools | Discover loaded libraries, inspect memory ranges, resolve symbols, scan patterns, and report counters. | Low-level debugging and engine internals. |
+| Script research | Observe script load boundaries and map script helpers to native/UI behavior. | Cocos2d-x/Lua runtime understanding. |
 
 ## Engine Detection
 
@@ -37,6 +47,20 @@ This is useful for understanding:
 - scene transitions
 - reward/flag/save side effects
 
+## Native Runtime Workflows
+
+The project uses a layered workflow:
+
+1. Identify active process and ABI.
+2. Confirm which engine/runtime libraries are mapped.
+3. Choose an engine strategy: IL2CPP metadata, Cocos2d-x/Lua script boundary, exported symbols, or pattern research.
+4. Add a narrow observation point.
+5. Verify with status counters and logs.
+6. Only then add a runtime toggle or patch.
+
+This is intentionally conservative. A runtime tool that cannot be turned off or verified is not a
+good research tool.
+
 ## Fast-Iteration Design
 
 For dialogue/timer acceleration, the important design point is preserving execution order.
@@ -48,7 +72,19 @@ fire in their natural order.
 That reasoning maps directly to AI simulation work, where fast iteration is useful only if the
 environment state remains valid.
 
-## What I Would Discuss Live
+## Relevance To AI-Agent Evaluation
+
+An AI agent interacting with a game needs a bridge between model decisions and environment state.
+This project studies the lower-level pieces of that bridge:
+
+- detecting which runtime is present
+- locating stable observation points
+- reducing idle wait time
+- preserving side effects
+- producing counters/logs that make runs auditable
+- running on Android devices and emulators
+
+## Discussion Topics
 
 - How I identify the process and loaded runtime libraries.
 - How I choose a Unity IL2CPP strategy versus a Cocos2d-x/Lua strategy.
@@ -56,4 +92,3 @@ environment state remains valid.
 - How I use counters/status files to validate behavior on-device.
 - How emulator/root setup supports repeatable runtime experiments.
 - How this work connects to AI-agent evaluation, state extraction, and simulation acceleration.
-
